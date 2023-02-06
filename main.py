@@ -14,8 +14,6 @@ import aiohttp
 import giphy_client
 from giphy_client.rest import ApiException
 import praw
-import akinator
-from akinator.async_aki import Akinator
 from nextcord.ext.commands import BucketType
 import asyncio
 from nextcord.ext import menus
