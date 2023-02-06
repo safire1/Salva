@@ -14,17 +14,18 @@ import aiohttp
 import giphy_client
 from giphy_client.rest import ApiException
 import praw
+import akinator
+from akinator.async_aki import Akinator
 from nextcord.ext.commands import BucketType
 import asyncio
-from nextcord.ext import menus
-from nextcord import Colour
+import wavelink
 
 intents = nextcord.Intents.all()
 
 
 prefix = ["sl_", "Sl_"]
 
-client = commands.Bot(command_prefix=prefix, intents=intents, case_insensitive=False)
+client = commands.Bot(command_prefix=commands.when_mentioned_or('sl_', 'Sl_'), intents=intents, case_insensitive=False)
 client.remove_command("help")
 
 api_key = "17e2ecb7b02b0a211b6a5707146e11f5"
@@ -61,7 +62,189 @@ huging = ["https://media.tenor.com/mEPycs_KzDkAAAAS/hugs.gif",
           "https://tenor.com/view/hugs-hug-ghost-hug-gif-4451998"]
 
 
-tips = ['You can get certain achievements while using this bot! Trust me they are a big flex! `sl_achievements`']
+tips = ['You can get certain achievements while using this bot! Trust me they are a big flex! `sl_achievements`', 'All of the economy commands does not have a help menu, because.. um.. my master got lazy!', 'Winning hangman is tough, so I challenge you to win a hangman game and get the `hangmon` cool achievement! `sl_hangman`']
+
+@client.command(aliases=['hang'])
+async def hangman(ctx):
+    words = ["january","border","image","film","promise","kids","lungs","doll","rhyme","damage"
+                   ,"plants"] #You can add more words!
+    word = random.choice(words)
+        
+    correct_letters = []
+        
+    incorrect_letters = []
+        
+    chances = 6
+        
+    word_state = ["-"] * len(word)
+       
+    display = await ctx.send(f"Word: {' '.join(word_state)}\nChances: {chances}")
+    message = await ctx.send("---------------")
+        
+    game_over = False
+    while not game_over:
+
+        raw_guess = await client.wait_for('message', check=lambda m: m.author == ctx.author, timeout=60)
+        guess = str(raw_guess.content.lower())
+        
+        if len(guess) == 1 and guess.isalpha():
+            
+            if guess in correct_letters or guess in incorrect_letters:
+                temp = await ctx.send("You have already guessed that letter!")
+                await asyncio.sleep(1)
+                await raw_guess.delete()
+                await temp.delete()
+                await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+               
+            elif guess in word:
+                correct_letters.append(guess)
+                
+                for i, c in enumerate(word):
+                    if c == guess:
+                        word_state[i] = c
+
+                if all(c in correct_letters for c in word):
+                	
+                    with open(f'databases/{ctx.author.id}.txt', 'a+') as f:
+						
+                        if "Hangmon" in open(f'databases/{ctx.author.id}.txt').read():
+                        	return
+                    	
+                        else:
+                        	await ctx.send(achi("Hangmon", " "))
+                        	f.write(f"<:pokemon_gun:1064962180581183499> Hangmon\n")
+                    
+                    await ctx.send(f"Congratulations, you won!\nThe word was {word}")
+                    
+                    game_over = True
+                else:
+                    temp = await ctx.send("Correct!")
+                    await asyncio.sleep(0.5)
+                    await raw_guess.delete()
+                    await temp.delete()
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+            else:
+                incorrect_letters.append(guess)
+                chances -= 1
+                    
+                if chances == 0:
+                    msg = await ctx.send("Incorrect!")
+                    await raw_guess.delete()
+                    await asyncio.sleep(0.5)
+                    await msg.delete()
+                    await message.edit(content="   ------- \n"
+                                            "  |     | \n"
+                                            "  |     |\n"
+                                            "  |     | \n"
+                                            "  |     O \n"
+                                            "  |    /|\ \n"
+                                            "  |    / \ \n"
+                                            "-----\n"
+                                            "-----------------------\n"
+                                            f"Wrong guess. You are hanged!!!\nThe word was {word}")
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+                    game_over = True
+
+                elif chances == 5:
+                    msg = await ctx.send(f"Incorrect!")
+                    await raw_guess.delete()
+                    await asyncio.sleep(0.5)
+                    await msg.delete()
+                    await message.edit(content="   -------\n"
+                                                "  |      \n"
+                                                "  |      \n"
+                                                "  |      \n"
+                                                "  |      \n"
+                                                "  |      \n"
+                                                "  |      \n"
+                                                "-----\n"
+                                                "-----------------------\n")
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+
+                elif chances == 4:
+                    msg = await ctx.send(f"Incorrect!")
+                    await raw_guess.delete()
+                    await asyncio.sleep(0.5)
+                    await msg.delete()
+                    await message.edit(content="   -------\n"
+                                            "  |     | \n"
+                                            "  |     |\n"
+                                            "  |      \n"
+                                            "  |      \n"
+                                            "  |      \n"
+                                            "  |      \n"
+                                            "-----\n"
+                                            "-----------------------\n")
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+
+                elif chances == 3:
+                    msg = await ctx.send(f"Incorrect!")
+                    await raw_guess.delete()
+                    await asyncio.sleep(0.5)
+                    await msg.delete()
+                    await message.edit(content="   -------\n"
+                                            "  |     | \n"
+                                            "  |     |\n"
+                                            "  |     | \n"
+                                            "  |      \n"
+                                            "  |      \n"
+                                            "  |      \n"
+                                            "-----\n"
+                                            "-----------------------\n")
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+
+                elif chances == 2:
+                    msg = await ctx.send(f"Incorrect!")
+                    await raw_guess.delete()
+                    await asyncio.sleep(0.5)
+                    await msg.delete()
+                    await message.edit(content="   -------\n"
+                                            "  |     | \n"
+                                            "  |     |\n"
+                                            "  |     | \n"
+                                            "  |     O \n"
+                                            "  |      \n"
+                                            "  |      \n"
+                                            "-----\n"
+                                            "-----------------------\n")
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+                    
+                elif chances == 1:
+                    msg = await ctx.send(f"Incorrect!")
+                    await raw_guess.delete()
+                    await asyncio.sleep(0.5)
+                    await msg.delete()
+                    await message.edit(content="   ------- \n"
+                                            "  |     | \n"
+                                            "  |     |\n"
+                                            "  |     | \n"
+                                            "  |     O \n"
+                                            "  |    /|\ \n"
+                                            "  |     \n"
+                                            "-----\n"
+                                            "-----------------------\n")
+                    await display.edit(f"Word: {' '.join(word_state)}\nChances: {chances}")
+        else:
+            await ctx.send("Please enter a single letter.")           
+
+@client.command(name='dminv')
+async def _dm(ctx, guild_id: int):
+    if str(ctx.author.id) == "761614035908034570":
+        guild = client.get_guild(guild_id)
+        channel = guild.channels[0]
+        invitelink = await channel.create_invite(max_uses=1)
+        await ctx.author.send(invitelink)
+
+@client.command()
+async def servers(ctx):
+    if str(ctx.author.id) == "761614035908034570":
+        em = nextcord.Embed(title="Guilds")
+        activeservers = client.guilds
+        for guild in activeservers:
+            em.add_field(name="l", value = f"Guild: {guild.name} MemberCount: {guild.member_count} ID: {guild.id}")
+        await ctx.send(embed=em)
+    else:
+        await ctx.send("Command is owner only")
 
 @client.group(invoke_without_command=True, aliases=["helpp"])
 async def help(ctx):
@@ -73,8 +256,7 @@ async def help(ctx):
 
 **Current games**: Feeling bored? Want to know what other members of the server are doing? Then *Current games* is waiting for you! Try sl_help currentgames or sl_cg right now!
 
-**Who's playing**: Going to play a game, but you are alone and want to play with others? sl_whosplaying will show you the list of people playing the game you searched for! Try sl_help whosplaying right now!
-
+**Vote**: Right now! You get featured in our community, 30k economy xp, rare achievements by voting regularly and much more!
 ------------------------------------------------------------------------
 
 **Tip** :- {random.choice(tips)}
@@ -85,8 +267,13 @@ async def help(ctx):
     em.set_footer(text="*Page 1/2*")
     button = nextcord.ui.Button(label=" Invite me", emoji="🔗", style=nextcord.ButtonStyle.url, url="https://discord.com/api/oauth2/authorize?client_id=1054719146304225285&permissions=8&scope=bot%20applications.commands")
     view.add_item(button)
-    b2 = nextcord.ui.Button(label=" Support Server", emoji="📩", style=nextcord.ButtonStyle.url, url="https://discord.gg/wxmfApgR")
+    b2 = nextcord.ui.Button(label=" Community Server", emoji="📩", style=nextcord.ButtonStyle.url, url="https://discord.gg/2epn72NWah")
     view.add_item(b2)
+    b3 = nextcord.ui.Button(label="Vote",emoji="<:vote:1067720563113607188>", style=nextcord.ButtonStyle.url,url="https://top.gg/bot/1054719146304225285")
+    view.add_item(b3)
+    b4=nextcord.ui.Button(label="Website",emoji="<:IconStatusWebOnline:1067729746881953822>",style=nextcord.ButtonStyle.url,
+                          url="http://lnkiy.in/salva-web")
+    view.add_item(b4)
     await ctx.reply(embed=em, view=view)
     #await ctx.send(achi("Re", "lol"))
 
@@ -202,10 +389,17 @@ async def serverinfo(ctx):
     #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
     await ctx.send(embed=em)
 
+@client.command()
+async def vote(ctx):
+	b1 = nextcord.ui.Button(label="Vote", style=nextcord.ButtonStyle.url,url="https://top.gg/bot/1054719146304225285")
+	l1 = nextcord.ui.View()
+	l1.add_item(b1)
+	em = nextcord.Embed(description="You get featured in our community, 30k economy xp, rare achievements by voting regularly", color=nextcord.Colour.green())
+	await ctx.send(embed=em, view=l1)
+    
 @client.event
 async def on_message(message):
     if not message.author.bot:
-
         with open('databases/level.json', 'r') as f:
             users = json.load(f)
 
@@ -215,6 +409,62 @@ async def on_message(message):
 
         with open('databases/level.json', 'w') as f:
             json.dump(users, f)
+    if message.channel.id == 1067703010941210666:
+        tips = ['You can get rare achievements by voting for me', 'Someone of the epic achievements you can get are - Voter, Epic Voter, Voting Wizard, etc.']
+        data = message.content.split(" ")
+        user = re.sub("\D", "", data[3])
+        user_object = client.get_user(int(user)) or await client.fetch_user(int(user))
+        user = user_object
+        await open_account(user)
+        await update_bank(user, 1 * 30000, "Pocket")
+        
+        for embed in message.embeds:
+            em = nextcord.Embed(title=embed.title, description=f"Thanks for voting for me on top.gg! +30k economy xp +featured in the community server", color=nextcord.Colour.random())
+            em.set_footer(text="You can get rare achievements by voting for me regularly and maintaining your streak")
+            if embed.fields:
+                for field in embed.fields:
+                    em.add_field(name=field.name, value=field.value)
+                    
+        await user_object.send(embed=em)
+        y = random.randrange(0, 100)
+        if y < 70:
+            try:            
+                with open(f'databases/{user_object.id}.txt', 'a+') as f:
+                    if "Voter" in open(f'databases/{user_object.id}.txt').read():
+                        print('rrr')
+                        return
+                    else:  
+                        await user_object.send(achi("Voter", " "))
+                        f.write(f"<:tick:964589146272325682> Voter\n")
+                            #await ctx.send(achi("Big", "PP"))
+            except Exception as e:
+                    print(e)
+        #x = random.randrange(0, 100)
+        if y > 70 and y < 80:
+            try:            
+                with open(f'databases/{user_object.id}.txt', 'a+') as f:
+                    if "Epic Voter" in open(f'databases/{user_object.id}.txt').read():
+                        print('rrr')
+                        return
+                    else:  
+                        await user_object.send(achi("Epic", "Voter"))
+                        f.write(f"<:HypeSquadEventsBadge:880114512013971537> Epic Voter\n")
+                            #await ctx.send(achi("Big", "PP"))
+            except Exception as e:
+                    print(e)
+        
+        if y > 97:
+            try:            
+                with open(f'databases/{user_object.id}.txt', 'a+') as f:
+                    if "Voting Wizard" in open(f'databases/{user_object.id}.txt').read():
+                        print('rrr')
+                        return
+                    else:  
+                        await user_object.send(achi("Voting", "Wizard"))
+                        f.write(f"<:mrgreycrown:1068109096819113984> Voting Wizard\n")
+                            #await ctx.send(achi("Big", "PP"))
+            except Exception as e:
+                    print(e)
 
     await client.process_commands(message)
 
@@ -296,6 +546,106 @@ async def hack(ctx):
     #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
     await ctx.send(embed=em)  
 
+@help.command()
+async def play(ctx):
+
+    em = nextcord.Embed(title="**Play**", description="The bot will play the specified song!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''play [song]''')
+    em.add_field(name="**Example**", value="play never gonna give you up")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command()
+async def pause(ctx):
+
+    em = nextcord.Embed(title="**Pause**", description="The bot will pause the current song!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''pause''')
+    em.add_field(name="**Example**", value="pause")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command()
+async def resume(ctx):
+
+    em = nextcord.Embed(title="**Resume**", description="The bot will resume the paused song!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''resume''')
+    em.add_field(name="**Example**", value="resume")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command()
+async def skip(ctx):
+
+    em = nextcord.Embed(title="**Skip**", description="The bot will skip the current song!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''skip''')
+    em.add_field(name="**Example**", value="skip")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command()
+async def stop(ctx):
+
+    em = nextcord.Embed(title="**Stop**", description="The bot will completely stop the current song!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''stop''')
+    em.add_field(name="**Example**", value="stop")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command()
+async def loop(ctx):
+
+    em = nextcord.Embed(title="**Loop**", description="The bot will toggle loop to the song!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''loop''')
+    em.add_field(name="**Example**", value="loop")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command()
+async def queue(ctx):
+
+    em = nextcord.Embed(title="**Queue**", description="The bot will show you your queue list!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''queue''')
+    em.add_field(name="**Example**", value="queue")
+    #em.add_field(name="**Aliases**", value="checkmsg")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+@help.command(aliases=['dc'])
+async def disconnect(ctx):
+
+    em = nextcord.Embed(title="**Disconnect**", description="The bot will disconnect from the voice channel!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''disconnect''')
+    em.add_field(name="**Example**", value="disconnect")
+    em.add_field(name="**Aliases**", value="dc")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+
+    
+@help.command(aliases=['hang'])
+async def hangman(ctx):
+
+    em = nextcord.Embed(title="**Hangman**", description="Play the game of hangman with me!",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**Syntax**", value='''hangman''')
+    em.add_field(name="**Example**", value="hangman")
+    em.add_field(name="**Aliases**", value="hang")
+    #em.add_field(name='''Note''',value='''Make sure your questions is within " "''', inline=False)
+    await ctx.send(embed=em)
+    
 @client.command()
 async def cry(ctx):
     search = "crying"
@@ -378,19 +728,263 @@ async def status_task():
         await asyncio.sleep(30)
         await client.change_presence(activity=r)
 
+        
+@tasks.loop(hours=24)
+async def remind_todo():
+    for filename in os.listdir('databases/'):
+        if filename.startswith('t'):
+            author_id = filename[1:-4]
+            print(author_id)
+            author_id = int(author_id)
+            user = client.get_user(author_id)
+            try:
+                em = nextcord.Embed(title="Your To-Do (reminder)", color=nextcord.Colour.random())
+                with open(f"databases/t{author_id}.txt", "r") as f:
+                    for i, line in enumerate(f):
+                        em.add_field(name=f"**{i+1}**", value=line, inline=False)
+                
+                em.set_footer(text="Clear your to-do list (`sl_tclear`) to not get these notifications")
+                await user.send(embed=em)
 
+            except Exception as e:
+                print(e)
+
+@client.command()
+async def start_t(ctx):
+    if ctx.author.id == 761614035908034570:
+        client.loop.create_task(remind_todo())
+        await ctx.send("Sure thing sir!")
+                
 @client.event
 async def on_ready():
     global startTime
     startTime = time.time()
-    print("bot is ready")
+    print("bot is ready\n dont forget to start todo timer sir!")
     await gen_memes() 
     client.loop.create_task(status_task())
     global  rf
     global rq 
     rf = randf()
     rq = randq()
+    client.loop.create_task(node_connect())
 
+async def node_connect():
+    await client.wait_until_ready()
+    await wavelink.NodePool.create_node(bot=client, host="ssl.freelavalink.ga", port=443, password="www.freelavalink.ga", https=True)
+
+@client.event
+async def on_wavelink_node_ready(node: wavelink.Node):
+    print(f"Node {node.identifier} is ready")
+
+@client.event
+async def on_wavelink_track_end(player: wavelink.Player, track: wavelink.Track, reason):
+    ctx = player.ctx
+
+    vc: player = ctx.voice_client
+
+    if vc.loop:
+        if not getattr(ctx.author.voice, "channel", None):
+            msg = await ctx.send("Voice channel is empty, disconnecting after 5 seconds")
+            await asyncio.sleep(5)
+            await vc.disconnect()
+            await msg.delete()
+            return
+        else:
+        	return await vc.play(track)
+
+    try:
+        next_song = vc.queue.get()
+        await vc.play(next_song)
+
+        search = next_song
+
+        embed = nextcord.Embed(title="🔎 Now playing", description=f"[{search.title}]({search.uri})", color=nextcord.Colour.green())
+        embed.add_field(name="Duration", value=f"{search.length}s", inline=False)
+        embed.add_field(name="Author", value=search.author, inline=False)
+        embed.set_footer(text="Use `sl_pause` to pause the song, `sl_help music` for more information!")
+        await ctx.send(embed=embed)
+    except:
+        #An exception when after the track end, the queue is now empty. If you dont do this, it will get error.
+        await vc.stop()
+        msg = await ctx.send("Queue is empty, disconnecting after 5 seconds")
+        await asyncio.sleep(5)
+        await vc.disconnect()
+        await msg.delete()
+
+      
+@client.command()
+async def play(ctx: commands.Context, *, search: wavelink.YouTubeTrack):
+    if not ctx.voice_client:
+        vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    if vc.queue.is_empty and not vc.is_playing():
+
+
+        await vc.play(search)
+        embed = nextcord.Embed(title="🔎 Now playing", description=f"[{search.title}]({search.uri})", color=nextcord.Colour.green())
+        embed.add_field(name="Duration", value=f"{search.length}s", inline=False)
+        embed.add_field(name="Author", value=search.author, inline=False)
+        embed.set_footer(text="Use `sl_pause` to pause the song, `sl_help music` for more information!")
+        await ctx.send(embed=embed)
+    
+    else:
+        await vc.queue.put_wait(search)
+        embed = nextcord.Embed(title="➕ Added to the queue", description=f"[{search.title}]({search.uri})", color=nextcord.Colour.green())
+        embed.add_field(name="Duration", value=f"{search.length}s", inline=False)
+        embed.add_field(name="Author", value=search.author, inline=False)
+        embed.set_footer(text="`sl_help music` for more information!")
+        await ctx.send(embed=embed)
+
+        
+
+    vc.ctx = ctx
+    setattr(vc, "loop", False)
+
+@client.command()
+async def pause(ctx: commands.Context):
+    if not ctx.voice_client:
+        em = nextcord.Embed(description="You are not playing a song!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    await vc.pause()
+    embed = nextcord.Embed(title="Music Paused", color=nextcord.Colour.orange())
+    embed.set_footer(text="Use `sl_resume` to resume the song, `sl_help music` for more information!")
+    await ctx.send(embed=embed)
+
+
+@client.command()
+async def resume(ctx: commands.Context):
+    if not ctx.voice_client:
+        em = nextcord.Embed(description="You are not playing a song!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    await vc.resume()
+    embed = nextcord.Embed(title="Music Resumed", color=nextcord.Colour.green())
+    embed.set_footer(text="Use `sl_stop` to stop the song, `sl_help music` for more information!")
+    await ctx.send(embed=embed)
+
+@client.command()
+async def stop(ctx: commands.Context):
+    if not ctx.voice_client:
+        em = nextcord.Embed(description="You are not playing a song!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    await vc.stop()
+    embed = nextcord.Embed(title="Music Stopped", color=nextcord.Colour.red())
+    embed.set_footer(text="Use `sl_play` to play a song, `sl_help music` for more information!")
+    await ctx.send(embed=embed)
+
+@client.command()
+async def skip(ctx: commands.Context):
+    if not ctx.voice_client:
+        em = nextcord.Embed(description="You are not playing a song!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    await vc.stop()
+    embed = nextcord.Embed(title="Music Skipped", color=nextcord.Colour.green())
+    #embed.set_footer(text="`sl_help music` for more information!")
+    await ctx.send(embed=embed)
+
+@client.command(aliases=['dc'])
+async def disconnect(ctx: commands.Context):
+    if not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    await vc.disconnect()
+    embed = nextcord.Embed(title="Disconnected", color=nextcord.Colour.red())
+    embed.set_footer(text="Use `sl_help music` for more information!")
+    await ctx.send(embed=embed)
+
+@client.command()
+async def loop(ctx: commands.Context):
+    if not ctx.voice_client:
+        em = nextcord.Embed(description="You are not playing a song!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    
+    try:
+        vc.loop ^= True
+    except Exception:
+        setattr(vc, "loop", False)
+
+    if vc.loop:
+        return await ctx.send("🔃 Loop has been Enabled.")
+    else:
+        return await ctx.send("❌ Loop has been Disabled.")
+        
+
+@client.command()
+async def queue(ctx: commands.Context):
+    if not ctx.voice_client:
+        em = nextcord.Embed(description="You are not playing a song!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+    
+    elif not getattr(ctx.author.voice, "channel", None):
+        em = nextcord.Embed(description="You must join a voice channel in order to use this command!", color=nextcord.Colour.red())
+        return await ctx.send(embed=em)
+
+    else:
+        vc: wavelink.Player = ctx.voice_client
+
+    if vc.queue.is_empty:
+        return await ctx.send("The queue is empty!")
+    
+    embed = nextcord.Embed(title="Your queue")
+    
+    queue = vc.queue.copy()
+    song_count = 0
+
+    for song in queue:
+        song_count += 1
+        embed.add_field(name=f"{song_count}", value=f"[{song.title}]({song.uri})", inline=False)
+
+    await ctx.send(embed=embed)
 
 import datetime
 
@@ -450,7 +1044,7 @@ async def guessthenumber(ctx):
         return msg.author == ctx.author and msg.channel == ctx.message.channel
 
     for i in range(1, 11):
-        guess = await client.wait_for('message', check=check)
+        guess = await client.wait_for('message', check=check, timeout=30)
         try:
             lol = int(guess.content)
         except Exception as e:
@@ -673,7 +1267,7 @@ class Menu(nextcord.ui.View):
     def __init__(self):
         super().__init__(timeout=50)
         self.value = None
-
+        
     @nextcord.ui.button(label="Next", style=nextcord.ButtonStyle.green)
     async def menu1(self, button: nextcord.ui.button, interaction: nextcord.Interaction):
         em = nextcord.Embed(
@@ -685,7 +1279,7 @@ class Menu(nextcord.ui.View):
         em.add_field(name="**ToDo**", value="`sl_help todo`")
         em.add_field(name="**GlobalChat**", value="`sl_help globalchat`")
         em.add_field(name="**Economy**", value="`sl_help economy`")
-        em.add_field(name="**Calculator**", value="`sl_help calculator`")
+        em.add_field(name="**Music**", value="`sl_help music`")
         em.add_field(name="**Slash commands**", value="`sl_help slash`")
         em.add_field(name="**Links**", value="[Invite me](https://discord.com/api/oauth2/authorize?client_id=1054719146304225285&permissions=8&scope=bot%20applications.commands) || [Support Server](https://discord.gg/wxmfApgR)", inline=False)
         em.set_footer(text="Cant figure out how to use a command? sl_help [command] to get some information related to the command\nTry my ticket system\n*Page 2/2*")
@@ -701,7 +1295,7 @@ class Menu(nextcord.ui.View):
 
 **Current games**: Feeling bored? Want to know what other members of the server are doing? Then *Current games* is waiting for you! Try sl_help currentgames or sl_cg right now!
 
-**Who's playing**: Going to play a game, but you are alone and want to play with others? sl_whosplaying will show you the list of people playing the game you searched for! Try sl_help whosplaying right now!
+**Who's playing**: Going to play a game, but are you alone and want to play with others? sl_whosplaying will show you the list of people playing the game you searched for! Try sl_help whosplaying right now!
 
 ------------------------------------------------------------------------
 
@@ -712,6 +1306,9 @@ class Menu(nextcord.ui.View):
 **Question of the day**\n{rq}''', color=nextcord.Colour.random())
         em.set_footer(text="*Page 1/2*")
         await interaction.response.edit_message(embed=em)
+        
+
+
         
 
 @client.command()
@@ -1029,8 +1626,8 @@ async def fun(ctx):
     em = nextcord.Embed(title="Fun", description="Use help <command> to get extend information of the command",
                        colour=nextcord.Colour.random())
     em.add_field(name="**All**",
-                 value="<:arrow:909827536513532015>Akinator, currentgames, whosplaying, guess, choose,\n<:arrow:909827536513532015>pp, fact, rate, hack, rps,\n<:arrow:909827536513532015>joke, meme, 8ball, noob_rate,\n<:arrow:909827536513532015>tictactoe, happy, giphy, epic_rate,\n<:arrow:909827536513532015>hug, ship, achievements ", inline=False)
-    em.add_field(name="**Games**", value="<:arrow:909827536513532015>Akinator, guessthenumber, rockpaperscissors, tictactoe", inline=False)
+                 value="<:arrow:909827536513532015>Akinator, currentgames, whosplaying, guess, choose,\n<:arrow:909827536513532015>pp, fact, rate, hack, rps,\n<:arrow:909827536513532015>joke, meme, 8ball, noob_rate,\n<:arrow:909827536513532015>tictactoe, happy, giphy, epic_rate,\n<:arrow:909827536513532015>hug, ship, achievements, hangman ", inline=False)
+    em.add_field(name="**Games**", value="<:arrow:909827536513532015>Akinator, guessthenumber, rockpaperscissors, tictactoe, hangman", inline=False)
     em.add_field(name="**Highlights**", value="<:arrow:909827536513532015>Currentgames, whosplaying, ship", inline=False)
 
 
@@ -1052,8 +1649,19 @@ async def tools(ctx):
     em = nextcord.Embed(title="Tools", description="Use help <command> to get extend information of the command",
                        colour=nextcord.Colour.random())
     em.add_field(name="**All**",
-                 value="<:arrow:909827536513532015>Avatar, poll, weather, checkmessages, bitcoin,\n<:arrow:909827536513532015>Servericon, serverinfo, whois, membercount, afk,\n<:arrow:909827536513532015>Calculator", inline=False)
+                 value="<:arrow:909827536513532015>Avatar, poll, weather, checkmessages, bitcoin,\n<:arrow:909827536513532015>Servericon, serverinfo, whois, membercount, afk,\n<:arrow:909827536513532015>Calculator, vote", inline=False)
     em.add_field(name="**Highlights**", value="<:arrow:909827536513532015>Weather, bitcoin", inline=False)
+
+
+    await ctx.send(embed=em)
+
+@help.command()
+async def music(ctx):
+    em = nextcord.Embed(title="Music", description="Use help <command> to get extend information of the command",
+                       colour=nextcord.Colour.random())
+    em.add_field(name="**All**",
+                 value="<:arrow:909827536513532015>Play, pause, resume, skip, stop,\n<:arrow:909827536513532015>Loop, queue, disconnect", inline=False)
+    #em.add_field(name="**Highlights**", value="<:arrow:909827536513532015>Weather, bitcoin", inline=False)
 
 
     await ctx.send(embed=em)
@@ -1174,7 +1782,7 @@ async def reverse(ctx):
 @commands.has_permissions(manage_messages=True)
 async def purge(ctx, amount = 3):
     await ctx.send(f"`Deleting {amount} messages`")
-    await ctx.channel.purge(limit=amount+1)
+    await ctx.channel.purge(limit=amount+2)
 
 @client.command(aliases=['noob'])
 async def noob_rate(ctx, mem: nextcord.Member = None):
@@ -1184,15 +1792,15 @@ async def noob_rate(ctx, mem: nextcord.Member = None):
         
     
     msg = await ctx.send(f"How much % noob is {mem.mention}?")
-    time.sleep(1)
+    await asyncio.sleep(1)
     await msg.edit("█▒▒▒▒▒▒▒▒▒ 10%")
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     await msg.edit("█████▒▒▒▒▒ 30%")
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     await msg.edit("███████▒▒▒50%")
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     await msg.edit("██████████ 100%")
-    time.sleep(1)
+    await asyncio.sleep(1)
     await msg.edit(f"{mem.mention} is\n[======================] **{random.randrange(0,100)}%** noob")
 
 @client.command(aliases=['epic'])
@@ -1203,15 +1811,15 @@ async def epic_rate(ctx, mem: nextcord.Member = None):
         
     
     msg = await ctx.send(f"How much % epic is {mem.mention}?")
-    time.sleep(1)
+    await asyncio.sleep(1)
     await msg.edit("█▒▒▒▒▒▒▒▒▒ 10%")
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     await msg.edit("█████▒▒▒▒▒ 30%")
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     await msg.edit("███████▒▒▒50%")
-    time.sleep(0.5)
+    await asyncio.sleep(0.5)
     await msg.edit("██████████ 100%")
-    time.sleep(1)
+    await asyncio.sleep(1)
     await msg.edit(f"{mem.mention} is\n[======================] **{random.randrange(0,100)}%** epic")
 
 @client.command()
@@ -1226,77 +1834,6 @@ async def kick(ctx, user: nextcord.Member, *, reason = None):
     await ctx.send(f"**{user}** has been kicked for **{reason}**.")
     await user.send(f"You were kicked from the guild {ctx.author.guild} for the reason {reason}")
 
-player1 = ""
-player2 = ""
-turn = ""
-gameOver = True
-
-board = []
-
-winningConditions = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6]
-]
-
-@client.command(aliases=["ttt"])
-async def tictactoe(ctx, p2: nextcord.Member):
-    global count
-    global player1
-    global player2
-    global turn
-    global gameOver
-
-    p1 = ctx.author
-    global p1_id
-    global p2_id
-    p1_id = p1.id
-    p2_id = p2.id
-
-    if p2.bot:
-        await ctx.send("You can't play with a bot!")
-        return
-
-    if gameOver:
-        global board
-        board = [":white_large_square:", ":white_large_square:", ":white_large_square:",
-                 ":white_large_square:", ":white_large_square:", ":white_large_square:",
-                 ":white_large_square:", ":white_large_square:", ":white_large_square:"]
-        turn = ""
-        gameOver = False
-        count = 0
-
-        player1 = p1
-        player2 = p2
-
-        # print the board
-        line = ""
-        for x in range(len(board)):
-            if x == 2 or x == 5 or x == 8:
-                line += " " + board[x]
-                await ctx.send(line)
-                line = ""
-            else:
-                line += " " + board[x]
-
-        # determine who goes first
-        num = random.randint(1, 2)
-        if num == 1:
-            turn = player1
-            myEmbed = nextcord.Embed(title= "Game has started!",description="IT IS <@" + str(player1.id) +  ">'s TURN.",color=0xe74c3c)
-            await ctx.send(embed=myEmbed)
-        elif num == 2:
-            turn = player2
-            myEmbed = nextcord.Embed(title= "Game has started!",description="IT IS <@" + str(player2.id) + ">'s TURN.",color=0xe74c3c)
-            await ctx.send(embed=myEmbed)
-    else:
-        myEmbed = nextcord.Embed(title= "Game in progress!",description="A game is still in progress. Finsih it before starting a new one",color=0xe74c3c)
-        await ctx.send(embed=myEmbed)
 
 @client.command()
 async def tadd(ctx,*,task):
@@ -1453,7 +1990,7 @@ async def addrole(ctx, member: nextcord.Member, role: nextcord.Role):
 async def removerole(ctx, member: nextcord.Member, role: nextcord.Role):
 
     await member.remove_roles(role)
-    em = nextcord.Embed(description=f"Gave {member.mention} the {role} role!", colour=nextcord.Colour.random())
+    em = nextcord.Embed(description=f"Removed the role {role} from {member.mention}!", colour=nextcord.Colour.random())
 
     await ctx.send(embed=em)
 
@@ -1581,7 +2118,7 @@ async def ticket(ctx,*, text="React below to create a ticket"):
     msg = await ctx.send(embed=embed)
     await msg.add_reaction("✉")
 
-COOLDOWN_AMOUNT = 100.0  # seconds
+COOLDOWN_AMOUNT = 10.0  # seconds
 last_executed = time.time()
 def assert_cooldown():
     global last_executed  # you can use a class for this if you wanted
@@ -1613,7 +2150,7 @@ async def on_raw_reaction_add(payload):
             await channel.send(f"{payload.member.mention} Thank You! for creating this ticket staff will contact you soon. Type **sl_close** to close the ticket.")
         
             try:
-                await client.wait_for("message", check=lambda m: m.channel== channel and m.author== payload.member and m.content == "sl_close", timeout= 3600)
+                await client.wait_for("message", check=lambda m: m.channel== channel and m.author== payload.member and m.content == "sl_close")
                     
             except asyncio.TimeoutError:
                 await channel.delete()
@@ -1621,6 +2158,8 @@ async def on_raw_reaction_add(payload):
             else:
                 await channel.delete()
         else:
+            message = await client.get_channel(payload.channel_id).fetch_message(payload.message_id)
+            await message.remove_reaction(payload.emoji, payload.member)
             await payload.member.send("You can not create a ticket because it is on a cooldown!")
     else:
         with open('reactrole.json') as react_file:
@@ -1952,7 +2491,7 @@ async def weather(ctx, *, city: str):
                                   timestamp=ctx.message.created_at, )
             embed.add_field(name="Descripition", value=f"**{weather_description}**", inline=False)
             embed.add_field(name="Temperature(C)", value=f"**{current_temperature_celsiuis}°C**", inline=False)
-            embed.add_field(name="Humidity(%)", value=f"**{current_humidity}%**", inline=False)
+            embed.add_field(name="Humidity(%)", value=f"**{current_humidity}%**", inline=False)         
             embed.add_field(name="Atmospheric Pressure(hPa)", value=f"**{current_pressure}hPa**", inline=False)
             embed.set_thumbnail(url="https://i.ibb.co/CMrsxdX/weather.png")
             embed.set_footer(text=f"Requested by {ctx.author.name}")
@@ -2442,7 +2981,7 @@ async def fish(ctx, item="rod", amount=1):
                     return
                 else:  
                     await ctx.send(achi("Fisher", " "))
-                    f.write(f"<:crazy_carl:884492364331233312> Fisher\n")
+                    f.write(f"<:ping_carl:884492147187941376> Fisher\n")
                         #await ctx.send(achi("Big", "PP"))
 
         except Exception as e:
@@ -2740,23 +3279,24 @@ async def giphy(ctx, *, search):
 
 @client.command(aliases=['lmaoa'], pass_context=True)
 async def nsfw(ctx, *, search):
-    embed = nextcord.Embed(colour=nextcord.Colour.blue())
-    session = aiohttp.ClientSession()
+    if ctx.author.id == 761614035908034570:
+        embed = nextcord.Embed(colour=nextcord.Colour.blue())
+        session = aiohttp.ClientSession()
 
-    if search == '':
-        response = await session.get('https://api.giphy.com/v1/gifs/random?api_key=xWKaCRgTzEc0bZPhTlzvGoPSSTdS4tIZ')
-        data = json.loads(await response.text())
-        embed.set_image(url=data['data']['images']['original']['url'])
-    else:
-        search.replace(' ', '+')
-        response = await session.get('http://api.giphy.com/v1/gifs/search?q=' + search + '&api_key=xWKaCRgTzEc0bZPhTlzvGoPSSTdS4tIZ&limit=10')
-        data = json.loads(await response.text())
-        gif_choice = random.randint(0, 9)
-        embed.set_image(url=data['data'][gif_choice]['images']['original']['url'])
+        if search == '':
+            response = await session.get('https://api.giphy.com/v1/gifs/random?api_key=xWKaCRgTzEc0bZPhTlzvGoPSSTdS4tIZ')
+            data = json.loads(await response.text())
+            embed.set_image(url=data['data']['images']['original']['url'])
+        else:
+            search.replace(' ', '+')
+            response = await session.get('http://api.giphy.com/v1/gifs/search?q=' + search + '&api_key=xWKaCRgTzEc0bZPhTlzvGoPSSTdS4tIZ&limit=10')
+            data = json.loads(await response.text())
+            gif_choice = random.randint(0, 9)
+            embed.set_image(url=data['data'][gif_choice]['images']['original']['url'])
 
-    await session.close()
+        await session.close()
 
-    await ctx.send(embed=embed)
+        await ctx.send(embed=embed)
 
 
 @client.command()
@@ -2834,7 +3374,7 @@ async def on_command_error(ctx, error):
             mpem.set_footer(text=error)
             await ctx.send(embed=mpem)
         elif isinstance(error, commands.CommandOnCooldown):
-            mpem = nextcord.Embed(title="Error!", description="The command is on cooldown\nHaving trouble? Try ` sl_help [command name]`", color= 0xFF0000, timestamp=ctx.message.created_at)
+            mpem = nextcord.Embed(title="Error!", description="The command is on cooldown\nHaving trouble? Try `sl_help [command name]`", color= 0xFF0000, timestamp=ctx.message.created_at)
             mpem.set_footer(text=error)
             await ctx.send(embed=mpem)
         else:
