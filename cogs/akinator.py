@@ -49,7 +49,7 @@ class Akinator(commands.Cog):
                 else:
                     try:
                         q = aki.answer(msg.content.lower())
-                    except ak.InvalidAnswerError as e:
+                    except Exception as e:
                         await ctx.send(e)
                         continue
             aki.win()
