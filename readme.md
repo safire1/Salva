@@ -9,4 +9,4 @@ To-Do (shit)<br>
 Achievements (shit)<br>
 And much more<br>
 
-DeaDfor now 
+DeaD for now 
