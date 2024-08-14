@@ -1,5 +1,5 @@
 # Salva
-## A discord bot powered by a shit code)
+## A discord bot (shit code)
 
 <h4>With an:</h4>
 Advanced button calculator<br>
@@ -9,4 +9,4 @@ To-Do (shit)<br>
 Achievements (shit)<br>
 And much more<br>
 
-Dead f0r now 
+Discontinued...
